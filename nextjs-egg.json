@@ -1,0 +1,105 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": null
+    },
+    "exported_at": "2025-12-17T14:00:00+01:00",
+    "name": "Next JS (Auto-Create Module Type)",
+    "author": "info@vdbergjohannes.nl",
+    "description": "Host a Next JS application. Sets type: module for ESM support. Fixed bind address.",
+    "features": null,
+    "docker_images": {
+        "Nodejs 22": "ghcr.io/parkervcp/yolks:nodejs_22",
+        "Nodejs 21": "ghcr.io/parkervcp/yolks:nodejs_21",
+        "Nodejs 20": "ghcr.io/parkervcp/yolks:nodejs_20",
+        "Nodejs 18": "ghcr.io/parkervcp/yolks:nodejs_18"
+    },
+    "file_denylist": [],
+    "startup": "if [ ! -d /home/container/node_modules ]; then mkdir -p /home/container/node_modules; fi; if [ ! \"$(ls -A /home/container)\" ]; then echo -e \"/home/container is empty.\"; if [ -n \"${GIT_URL}\" ]; then echo -e \"Git URL found, cloning...\"; if [ -z ${GIT_BRANCH} ]; then git clone ${GIT_URL} /home/container; else git clone --single-branch --branch ${GIT_BRANCH} ${GIT_URL} /home/container; fi; fi; fi; if [ ! -f /home/container/package.json ]; then echo -e \"No package.json found. Generating safely using npm init...\"; npm init -y; npm pkg set type=\"module\"; npm pkg set scripts.dev=\"next dev\"; npm pkg set scripts.build=\"next build\"; npm pkg set scripts.start=\"next start\"; echo -e \"Installing Next.js {{NEXT_VERSION}}...\"; npm install next@{{NEXT_VERSION}} react@latest react-dom@latest; else echo -e \"package.json found, skipping creation.\"; fi; if [ -d .git ] && [ \"{{AUTO_UPDATE}}\" == \"1\" ]; then git pull; fi; echo -e \"Running npm install...\"; npm install; echo -e \"Building project...\"; npm run build; echo -e \"Starting server...\"; /usr/local/bin/npx next ${NODE_RUN_ENV} -H 0.0.0.0 -p {{SERVER_PORT}}",
+    "config": {
+        "files": "{}",
+        "startup": "{\r\n    \"done\": \"Ready on\"\r\n}",
+        "logs": "{}",
+        "stop": "^^C"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/bash\r\n# NodeJS App Installation Script\r\napt update\r\napt install -y git curl jq file unzip make gcc g++ python python-dev libtool\r\n\r\nmkdir -p /mnt/server\r\ncd /mnt/server\r\n\r\nif [ -n \"${GIT_URL}\" ]; then\r\n    if [[ ${GIT_URL} != *.git ]]; then\r\n        GIT_URL=${GIT_URL%/} \r\n        GIT_URL=${GIT_URL}.git\r\n    fi\r\n\r\n    if [ -z \"${USERNAME}\" ] && [ -z \"${ACCESS_TOKEN}\" ]; then\r\n        echo -e \"using anon api call\"\r\n    else\r\n        GIT_URL=\"https://${USERNAME}:${ACCESS_TOKEN}@$(echo -e ${GIT_URL} | cut -d/ -f3-)\"\r\n    fi\r\n\r\n    if [ ! \"$(ls -A /mnt/server)\" ]; then\r\n        echo -e \"cloning files into repo\"\r\n        if [ -z ${GIT_BRANCH} ]; then\r\n            git clone ${GIT_URL} .\r\n        else\r\n            git clone --single-branch --branch ${GIT_BRANCH} ${GIT_URL} .\r\n        fi\r\n    fi\r\nfi\r\n\r\nif [ -f /mnt/server/package.json ]; then\r\n    /usr/local/bin/npm install --production\r\nfi\r\n\r\necho -e \"install complete\"\r\nexit 0",
+            "container": "node:20-bullseye-slim",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "Next.js Version",
+            "description": "The version of Next.js to install if package.json is missing (e.g., 'latest' or '16.0.10').",
+            "env_variable": "NEXT_VERSION",
+            "default_value": "latest",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string",
+            "field_type": "text"
+        },
+        {
+            "name": "Node ENV",
+            "description": "NodeJS env (production or dev) used in start command.",
+            "env_variable": "NODE_RUN_ENV",
+            "default_value": "start",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        },
+        {
+            "name": "Git Repository URL",
+            "description": "Optional: Repo to clone.",
+            "env_variable": "GIT_URL",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "Branch",
+            "description": "Which branch to install",
+            "env_variable": "GIT_BRANCH",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "Auto Update",
+            "description": "Pull from git on startup (0 for false, 1 for true)",
+            "env_variable": "AUTO_UPDATE",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "Git Username",
+            "description": "Username for git auth",
+            "env_variable": "USERNAME",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "Git Access Token",
+            "description": "Token for git auth",
+            "env_variable": "ACCESS_TOKEN",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        }
+    ]
+}
