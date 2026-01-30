@@ -48,9 +48,9 @@ This Egg comes pre-configured with **all modern Node.js versions**, selectable d
 
 If this Egg saved you time or fixed your server headaches, consider supporting my work! It helps me keep creating tools and fixes.
 
-* **PayPal:** [paypal.me/vdbergjohannes](https://www.paypal.me/vdbergjohannes)
-* **Website:** [vdbergjohannes.nl](https://vdbergjohannes.nl)
+* **PayPal:** [paypal.me/JoopDev](https://www.paypal.me/joopdev)
+* **Website:** [JoopDev.com](https://joopdev.com)
 
 ---
 
-**Author:** vdbergjohannes
+**Author:** JoopDev (AKA. Vdbergjohannes)
