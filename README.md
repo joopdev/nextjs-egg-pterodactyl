@@ -1,4 +1,4 @@
-# 🚀 Next.js Pterodactyl Egg (Network Binding Fix)
+# 🚀 Next.js Pterodactyl Egg
 
 A custom, optimized Pterodactyl Egg for hosting Next.js applications.
 
