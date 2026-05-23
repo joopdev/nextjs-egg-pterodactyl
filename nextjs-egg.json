@@ -2,7 +2,7 @@
     "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
     "meta": {
         "version": "PTDL_v2",
-        "update_url": null
+        "update_url": "https://raw.githubusercontent.com/joopdev/nextjs-egg-pterodactyl/refs/heads/main/nextjs-egg.json"
     },
     "exported_at": "2025-12-17T14:00:00+01:00",
     "name": "Next JS",
