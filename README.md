@@ -60,6 +60,7 @@ This Egg comes pre-configured with all modern Node.js versions, selectable durin
 - **Unexpected dependency behavior:** Verify lockfiles in your project root (`package-lock.json`, `pnpm-lock.yaml`, or `yarn.lock`).
 - **Server builds on every boot in production:** This is expected when `NODE_RUN_ENV=start`; use `dev` while iterating quickly.
 - **Server not reachable from outside:** Confirm your panel allocation/port is correct; this Egg already binds Next.js to `0.0.0.0`.
+- **Install fails with `EBADENGINE` error:** The egg's initial installation script uses Node.js 22 to perform the first `npm install`. If your project strictly enforces a maximum Node version lower than 22 in your `package.json`, you may need to adjust your engines field or run npm install manually.
 
 ## ☕ Support My Work
 
