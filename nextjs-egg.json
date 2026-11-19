@@ -4,7 +4,7 @@
         "version": "PTDL_v2",
         "update_url": "https://raw.githubusercontent.com/joopdev/nextjs-egg-pterodactyl/refs/heads/main/nextjs-egg.json"
     },
-    "exported_at": "2025-12-17T14:00:00+01:00",
+    "exported_at": "2026-11-19T12:00:00+01:00",
     "name": "Next JS",
     "author": "info@joopdev.com",
     "description": "Host a Next.js application with reliable 0.0.0.0 binding and auto package manager detection.",
@@ -19,9 +19,9 @@
         "Node.js 20": "ghcr.io/parkervcp/yolks:nodejs_20",
         "Node.js 19": "ghcr.io/parkervcp/yolks:nodejs_19",
         "Node.js 18": "ghcr.io/parkervcp/yolks:nodejs_18"
-      },
+    },
     "file_denylist": [],
-    "startup": "cd /home/container; if [ ! \"$(ls -A /home/container 2>/dev/null)\" ]; then echo -e \"/home/container is empty.\"; if [ -n \"${GIT_URL}\" ]; then echo -e \"Git URL found, cloning...\"; if [ -z \"${GIT_BRANCH}\" ]; then git clone \"${GIT_URL}\" /home/container; else git clone --single-branch --branch \"${GIT_BRANCH}\" \"${GIT_URL}\" /home/container; fi; fi; fi; if [ ! -f package.json ]; then echo -e \"No package.json found. Creating a minimal Next.js project...\"; npm init -y; npm pkg set type=\"module\"; npm pkg set scripts.dev=\"next dev\"; npm pkg set scripts.build=\"next build\"; npm pkg set scripts.start=\"next start\"; echo -e \"Installing Next.js {{NEXT_VERSION}}...\"; npm install next@{{NEXT_VERSION}} react@latest react-dom@latest; else echo -e \"package.json found, skipping creation.\"; fi; if [ -d .git ] && [ \"{{AUTO_UPDATE}}\" = \"1\" ]; then echo -e \"Auto update enabled, pulling latest changes...\"; git pull; fi; corepack enable >/dev/null 2>&1 || true; PM_CHOICE=\"${PACKAGE_MANAGER:-auto}\"; if [ \"${PM_CHOICE}\" = \"auto\" ]; then if [ -f pnpm-lock.yaml ]; then PM_CHOICE=\"pnpm\"; elif [ -f yarn.lock ]; then PM_CHOICE=\"yarn\"; else PM_CHOICE=\"npm\"; fi; fi; echo -e \"Using package manager: ${PM_CHOICE}\"; if [ \"${NODE_RUN_ENV}\" = \"dev\" ]; then if [ \"${PM_CHOICE}\" = \"pnpm\" ]; then pnpm install; elif [ \"${PM_CHOICE}\" = \"yarn\" ]; then yarn install; else npm install; fi; else if [ \"${PM_CHOICE}\" = \"pnpm\" ]; then if [ -f pnpm-lock.yaml ]; then pnpm install --prod --frozen-lockfile; else pnpm install --prod; fi; elif [ \"${PM_CHOICE}\" = \"yarn\" ]; then yarn install --production=true; else if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then npm ci --omit=dev; else npm install --omit=dev; fi; fi; fi; if [ \"${NODE_RUN_ENV}\" = \"start\" ]; then echo -e \"Building project for production...\"; if [ \"${PM_CHOICE}\" = \"pnpm\" ]; then pnpm run build; elif [ \"${PM_CHOICE}\" = \"yarn\" ]; then yarn build; else npm run build; fi; fi; echo -e \"Starting Next.js with mode: ${NODE_RUN_ENV}\"; /usr/local/bin/npx next ${NODE_RUN_ENV} -H 0.0.0.0 -p {{SERVER_PORT}}",
+    "startup": "export COREPACK_ENABLE_DOWNLOAD_PROMPT=0 GIT_TERMINAL_PROMPT=0; corepack enable 2>/dev/null; if [ -z \"$(ls -A)\" ] && [ -n \"$GIT_URL\" ]; then git clone ${GIT_BRANCH:+-b $GIT_BRANCH} \"https://${ACCESS_TOKEN:+$USERNAME:$ACCESS_TOKEN@}${GIT_URL#https://}\" . || exit 1; fi; if [ ! -f package.json ]; then echo \"New project with Next.js {{NEXT_VERSION}}\"; echo '{\"private\":true,\"scripts\":{\"build\":\"next build\"} }' > package.json; mkdir -p app; echo 'export default ({ children }) => <html lang=\"en\"><body>{children}</body></html>' > app/layout.js; echo 'export default () => <h1>Next.js is running</h1>' > app/page.js; npm i next@{{NEXT_VERSION}} react react-dom; fi; [ \"{{AUTO_UPDATE}}\" = 1 ] && git pull; PM=$PACKAGE_MANAGER; if [ \"$PM\" = auto ]; then PM=npm; [ -f yarn.lock ] && PM=yarn; [ -f pnpm-lock.yaml ] && PM=pnpm; fi; if [ \"$PM\" = npm ]; then if [ -f package-lock.json ]; then npm ci --include=dev; else npm i --include=dev; fi; else $PM install --production=false; fi; if [ \"$NEXT_AUTO_UPDATE\" != off ] && [ \"{{AUTO_UPDATE}}\" != 1 ]; then V=$(node -p \"require('./node_modules/next/package.json').version\" 2>/dev/null); R=\"~\"; [ \"$NEXT_AUTO_UPDATE\" = minor ] && R=^; W=$(npm view \"next@$R$V\" version 2>/dev/null | tail -1 | tr -d \"'\" | awk '{print $NF}'); if [ -n \"$V\" ] && [ -n \"$W\" ] && [ \"$W\" != \"$V\" ]; then echo \"Updating Next.js $V to $W\"; if [ \"$PM\" = npm ]; then npm i --include=dev next@$W; else $PM add next@$W; fi; fi; fi; if [ \"$NODE_RUN_ENV\" = start ]; then $PM run build || exit 1; fi; npx next $NODE_RUN_ENV -H 0.0.0.0 -p {{SERVER_PORT}}",
     "config": {
         "files": "{}",
         "startup": "{\r\n    \"done\": \"Ready in\"\r\n}",
@@ -30,7 +30,7 @@
     },
     "scripts": {
         "installation": {
-            "script": "#!/bin/bash\r\n# NodeJS App Installation Script\r\napt update\r\napt install -y git curl jq file unzip make gcc g++ python3 libtool\r\n\r\nmkdir -p /mnt/server\r\ncd /mnt/server\r\n\r\nif [ -n \"${GIT_URL}\" ]; then\r\n    if [[ ${GIT_URL} != *.git ]]; then\r\n        GIT_URL=${GIT_URL%/} \r\n        GIT_URL=${GIT_URL}.git\r\n    fi\r\n\r\n    if [ -z \"${USERNAME}\" ] && [ -z \"${ACCESS_TOKEN}\" ]; then\r\n        echo -e \"using anon api call\"\r\n    else\r\n        GIT_URL=\"https://${USERNAME}:${ACCESS_TOKEN}@$(echo -e ${GIT_URL} | cut -d/ -f3-)\"\r\n    fi\r\n\r\n    if [ ! \"$(ls -A /mnt/server)\" ]; then\r\n        echo -e \"cloning files into repo\"\r\n        if [ -z \"${GIT_BRANCH}\" ]; then\r\n            git clone \"${GIT_URL}\" .\r\n        else\r\n            git clone --single-branch --branch \"${GIT_BRANCH}\" \"${GIT_URL}\" .\r\n        fi\r\n    fi\r\nfi\r\n\r\nif [ -f /mnt/server/package.json ]; then\r\n    corepack enable >/dev/null 2>&1 || true\r\n    PM_CHOICE=${PACKAGE_MANAGER:-auto}\r\n\r\n    if [ \"${PM_CHOICE}\" = \"auto\" ]; then\r\n        if [ -f /mnt/server/pnpm-lock.yaml ]; then\r\n            PM_CHOICE=pnpm\r\n        elif [ -f /mnt/server/yarn.lock ]; then\r\n            PM_CHOICE=yarn\r\n        else\r\n            PM_CHOICE=npm\r\n        fi\r\n    fi\r\n\r\n    echo -e \"using package manager: ${PM_CHOICE}\"\r\n\r\n    if [ \"${PM_CHOICE}\" = \"pnpm\" ]; then\r\n        if [ -f /mnt/server/pnpm-lock.yaml ]; then\r\n            pnpm install --prod --frozen-lockfile\r\n        else\r\n            pnpm install --prod\r\n        fi\r\n    elif [ \"${PM_CHOICE}\" = \"yarn\" ]; then\r\n        yarn install --production=true\r\n    else\r\n        if [ -f /mnt/server/package-lock.json ] || [ -f /mnt/server/npm-shrinkwrap.json ]; then\r\n            /usr/local/bin/npm ci --omit=dev\r\n        else\r\n            /usr/local/bin/npm install --omit=dev\r\n        fi\r\n    fi\r\nfi\r\n\r\necho -e \"install complete\"\r\nexit 0",
+            "script": "#!/bin/bash\r\nmkdir -p /mnt/server\r\necho \"Install complete. Your repository is cloned and dependencies are installed on the first start.\"",
             "container": "node:22-bookworm-slim",
             "entrypoint": "bash"
         }
@@ -38,12 +38,22 @@
     "variables": [
         {
             "name": "Next.js Version",
-            "description": "The version of Next.js to install if package.json is missing (e.g., 'latest' or '16.0.10').",
+            "description": "Next.js version used only when the egg creates a brand new project (no package.json yet), for example 'latest' or '16.4.6'. Existing projects keep the version in their own package.json.",
             "env_variable": "NEXT_VERSION",
             "default_value": "latest",
             "user_viewable": true,
             "user_editable": true,
             "rules": "required|string",
+            "field_type": "text"
+        },
+        {
+            "name": "Next.js Updates",
+            "description": "Keep Next.js updated on every start so security fixes land automatically. 'patch' (default) updates within your current minor version, for example 16.4.3 to 16.4.6. 'minor' updates within your current major version. 'off' never changes Next.js. Only Next.js is updated, your lockfile is kept, and it never jumps to a new major version. Skipped when Auto Update pulls from git.",
+            "env_variable": "NEXT_AUTO_UPDATE",
+            "default_value": "patch",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:off,patch,minor",
             "field_type": "text"
         },
         {
@@ -68,7 +78,7 @@
         },
         {
             "name": "Git Repository URL",
-            "description": "Optional: Repo to clone.",
+            "description": "Optional: repository to clone on the first start, when the server is still empty.",
             "env_variable": "GIT_URL",
             "default_value": "",
             "user_viewable": true,
@@ -108,7 +118,7 @@
         },
         {
             "name": "Git Access Token",
-            "description": "Token for git auth",
+            "description": "Token for private repositories. For a GitHub fine-grained token, give it read access to Contents of this repository.",
             "env_variable": "ACCESS_TOKEN",
             "default_value": "",
             "user_viewable": true,

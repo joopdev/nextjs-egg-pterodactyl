@@ -12,7 +12,7 @@ This Egg fixes that by automatically forcing the start command to listen on all 
 
 It also improves startup reliability by using smarter dependency install behavior with package manager detection:
 - **`auto` mode** detects lockfiles and picks `pnpm`, `yarn`, or `npm` automatically.
-- **In `start` mode**, it installs production dependencies and builds before launch.
+- **In `start` mode**, it installs all dependencies (including devDependencies such as Tailwind CSS, PostCSS and TypeScript) and builds before launch.
 - **In `dev` mode**, it installs full dependencies so local development tools still work.
 
 ## 🧩 Supported Versions
@@ -34,8 +34,11 @@ This Egg comes pre-configured with all modern Node.js versions, selectable durin
 ## ✨ Features
 
 - 🔌 **Instant Connectivity:** Pre-configured to listen on `0.0.0.0`, solving connection timeouts.
-- 📦 **Auto-Install:** Automatically runs npm install on startup if packages are missing.
-- ⚙️ **Smart Build:** Runs `npm run build` automatically in production mode (`NODE_RUN_ENV=start`).
+- 📦 **Auto-Install:** Clones your repository and installs dependencies on startup, using your lockfile.
+- 🌱 **Ready on an Empty Server:** A new server without files gets a small starter page, so it starts right away.
+- ⚙️ **Smart Build:** Runs `npm run build` automatically in production mode (`NODE_RUN_ENV=start`), with devDependencies installed so tools like Tailwind CSS and PostCSS work during the build.
+- 🛡️ **Safe Next.js Updates:** On every start, Next.js is updated within your current version line (patch updates by default), so security fixes land automatically. Only Next.js is updated, the same way you would do it by hand (`npm install next@16.4.6`, `pnpm add`, `yarn add`). Your lockfile is kept and it never jumps to a new major version.
+- 🔑 **Private Repositories:** Set the Git username and access token, and the server clones your private repository on first start. If cloning fails, the server stops with the error from git instead of starting an empty site.
 - 🧠 **Package Manager Auto-Detect:** Supports `npm`, `pnpm`, and `yarn` with optional manual override.
 - 🔒 **Secure:** Based on the official Pterodactyl Docker images (Parkervcp/Yolks).
 - ✅ **Better Validation:** Restricts runtime mode to `start` or `dev` to prevent invalid command values.
@@ -44,6 +47,8 @@ This Egg comes pre-configured with all modern Node.js versions, selectable durin
 
 - `NODE_RUN_ENV`: `start` for production, `dev` for development.
 - `PACKAGE_MANAGER`: `auto` (default), `npm`, `pnpm`, or `yarn`.
+- `NEXT_AUTO_UPDATE`: `patch` (default, for example 16.4.3 to 16.4.6), `minor` (stay within the current major version) or `off`.
+- `NEXT_VERSION`: only used when the egg creates a brand new project. Existing projects keep the version in their own `package.json`.
 
 ## 📥 Installation Guide
 
@@ -59,8 +64,9 @@ This Egg comes pre-configured with all modern Node.js versions, selectable durin
 - **`pnpm` or `yarn` command not found:** Keep `PACKAGE_MANAGER=npm` or ensure Corepack is available in your selected Node image.
 - **Unexpected dependency behavior:** Verify lockfiles in your project root (`package-lock.json`, `pnpm-lock.yaml`, or `yarn.lock`).
 - **Server builds on every boot in production:** This is expected when `NODE_RUN_ENV=start`; use `dev` while iterating quickly.
+- **Next.js shows a security vulnerability or upgrade prompt:** Keep `NEXT_AUTO_UPDATE` on `patch` (or `minor`) and restart the server. If the server pulls from git (`AUTO_UPDATE=1`), update Next.js in your repository instead; the egg will not change files that git manages.
 - **Server not reachable from outside:** Confirm your panel allocation/port is correct; this Egg already binds Next.js to `0.0.0.0`.
-- **Install fails with `EBADENGINE` error:** The egg's initial installation script uses Node.js 22 to perform the first `npm install`. If your project strictly enforces a maximum Node version lower than 22 in your `package.json`, you may need to adjust your engines field or run npm install manually.
+- **Clone fails with `Write access to repository not granted` or `Authentication failed`:** Your token has no access to the repository. For a GitHub fine-grained token, select the repository and give it `Contents: Read-only`, then restart the server.
 
 ## ☕ Support My Work
 
